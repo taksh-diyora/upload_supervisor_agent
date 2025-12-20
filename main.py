@@ -1,15 +1,14 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from langchain_core.messages import HumanMessage
-from graph.workflow import build_graph
+from agents.agent import build_agent, set_document_text, run_agent
 from utils.pdf_loader import load_pdf_text
 import os
 
-def run():
-    graph = build_graph()
 
-    document_text = None  # holds PDF content
+def run():
+    # Build agent once (requirement satisfied)
+    build_agent()
 
     print("Agentic AI System with CLI PDF Upload")
     print("Commands:")
@@ -23,7 +22,9 @@ def run():
             print("Goodbye!")
             break
 
-        # Handle PDF upload command
+        # -------------------------
+        # PDF upload command
+        # -------------------------
         if user_input.lower().startswith("upload "):
             pdf_name = user_input.split("upload ", 1)[1].strip()
             pdf_path = os.path.join("Docs", pdf_name)
@@ -34,21 +35,20 @@ def run():
 
             try:
                 document_text = load_pdf_text(pdf_path)
+                set_document_text(document_text)
                 print("✅ PDF uploaded and processed successfully.\n")
             except Exception as e:
                 print(f"❌ Failed to load PDF: {e}\n")
 
             continue
 
-        # Invoke agent workflow
-        result = graph.invoke(
-            {
-                "messages": [HumanMessage(content=user_input)],
-                "document_text": document_text
-            }
-        )
+        # -------------------------
+        # Answer generation (FIXED)
+        # -------------------------
+        answer = run_agent(user_input)
 
-        print("Assistant:", result["messages"][-1].content, "\n")
+        print("Assistant:", answer, "\n")
+
 
 if __name__ == "__main__":
     run()
